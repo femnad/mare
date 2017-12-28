@@ -16,9 +16,19 @@ func PanicIfErr(err error) {
 	}
 }
 
+func PanicIfNotOfType(encountered error, expected error) {
+	if encountered != expected {
+		PanicIfErr(encountered)
+	}
+}
+
 func ExpandUser(path string) string {
 	home := os.Getenv(homeEnvVar)
 	return strings.Replace(path, tilde, home, 1)
+}
+
+func ExpandUserAndOpen(path string) (*os.File, error) {
+	return os.Open(ExpandUser(path))
 }
 
 func Filter(items []string, f func(string) bool) []string {
