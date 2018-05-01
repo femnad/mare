@@ -68,7 +68,7 @@ func MapFileInfo(items []os.FileInfo, f func(os.FileInfo) string) []string {
 
 func Contains(array []string, item string) bool {
 	for _, arrayItem := range array {
-		if arrayItem == item {
+		if strings.Compare(arrayItem, item) == 0 {
 			return true
 		}
 	}
