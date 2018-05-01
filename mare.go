@@ -65,3 +65,12 @@ func MapFileInfo(items []os.FileInfo, f func(os.FileInfo) string) []string {
 	}
 	return outputItems
 }
+
+func Contains(array []string, item string) bool {
+	for _, arrayItem := range array {
+		if arrayItem == item {
+			return true
+		}
+	}
+	return false
+}
