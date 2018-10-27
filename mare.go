@@ -74,3 +74,15 @@ func Contains(array []string, item string) bool {
 	}
 	return false
 }
+
+func CloseAndCheck(file *os.File) {
+	err := file.Close()
+	PanicIfErr(err)
+}
+
+func WithFile(fileName string, fn func(file *os.File)) {
+	f, err := os.Open(fileName)
+	PanicIfErr(err)
+	defer CloseAndCheck(f)
+	fn(f)
+}
