@@ -1,6 +1,7 @@
 package mare
 
 import (
+	"log"
 	"os"
 	"strings"
 )
@@ -10,25 +11,9 @@ const (
 	tilde      = "~"
 )
 
-func PanicIfErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func PanicIfNotOfType(encountered error, expected error) {
-	if encountered != expected {
-		PanicIfErr(encountered)
-	}
-}
-
 func ExpandUser(path string) string {
 	home := os.Getenv(homeEnvVar)
 	return strings.Replace(path, tilde, home, 1)
-}
-
-func ExpandUserAndOpen(path string) (*os.File, error) {
-	return os.Open(ExpandUser(path))
 }
 
 func Filter(items []string, f func(string) bool) []string {
@@ -41,16 +26,16 @@ func Filter(items []string, f func(string) bool) []string {
 	return matchingItems
 }
 
-func Map(items []string, f func(string) string) []string {
-	outputItems := make([]string, len(items))
+func Map[T any](items []T, f func(T) T) []T {
+	outputItems := make([]T, len(items))
 	for index, item := range items {
 		outputItems[index] = f(item)
 	}
 	return outputItems
 }
 
-func FlatMap(items []string, f func(string) []string) []string {
-	outputItems := make([]string, 0)
+func FlatMap[T any](items []T, f func(T) []T) []T {
+	outputItems := make([]T, 0)
 	for _, item := range items {
 		outputList := f(item)
 		outputItems = append(outputItems, outputList...)
@@ -58,17 +43,9 @@ func FlatMap(items []string, f func(string) []string) []string {
 	return outputItems
 }
 
-func MapFileInfo(items []os.FileInfo, f func(os.FileInfo) string) []string {
-	outputItems := make([]string, len(items))
-	for index, item := range items {
-		outputItems[index] = f(item)
-	}
-	return outputItems
-}
-
-func Contains(array []string, item string) bool {
+func Contains[T comparable](array []T, item T) bool {
 	for _, arrayItem := range array {
-		if strings.Compare(arrayItem, item) == 0 {
+		if arrayItem == item {
 			return true
 		}
 	}
@@ -77,12 +54,16 @@ func Contains(array []string, item string) bool {
 
 func CloseAndCheck(file *os.File) {
 	err := file.Close()
-	PanicIfErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func WithFile(fileName string, fn func(file *os.File)) {
 	f, err := os.Open(fileName)
-	PanicIfErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer CloseAndCheck(f)
 	fn(f)
 }
