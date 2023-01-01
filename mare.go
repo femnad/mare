@@ -34,6 +34,14 @@ func Map[T any](items []T, f func(T) T) []T {
 	return outputItems
 }
 
+func MapToString[T any](items []T, f func(T) string) []string {
+	outputItems := make([]string, len(items))
+	for index, item := range items {
+		outputItems[index] = f(item)
+	}
+	return outputItems
+}
+
 func FlatMap[T any](items []T, f func(T) []T) []T {
 	outputItems := make([]T, 0)
 	for _, item := range items {
