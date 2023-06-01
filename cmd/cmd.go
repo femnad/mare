@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 )
@@ -19,9 +20,11 @@ type Input struct {
 
 // Output represents the response from an executed command.
 type Output struct {
-	Code   int
-	Stdout string
-	Stderr string
+	Code      int
+	ErrStream *io.Writer
+	OutStream *io.Writer
+	Stderr    string
+	Stdout    string
 }
 
 func getCmd(in Input) *exec.Cmd {
@@ -43,7 +46,7 @@ func getCmd(in Input) *exec.Cmd {
 	return cmd
 }
 
-// Run runs a command based on the CmdIn input and returns a CmdOut.
+// Run runs a command based on the Input and returns the corresponding Output.
 func Run(in Input) (Output, error) {
 	cmd := getCmd(in)
 
@@ -54,6 +57,13 @@ func Run(in Input) (Output, error) {
 
 	err := cmd.Run()
 	return Output{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
+}
+
+// RunStream runs a command and populates ErrStream and OutStream in the Output.
+func RunStream(in Input) (Output, error) {
+	cmd := getCmd(in)
+	err := cmd.Run()
+	return Output{ErrStream: &cmd.Stderr, OutStream: &cmd.Stdout, Code: cmd.ProcessState.ExitCode()}, err
 }
 
 // RunFormatError runs a command and on any errors returns an error which contains information about the execution.
