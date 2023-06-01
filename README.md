@@ -24,6 +24,14 @@ Contains checks if the given item exists in the given slice.
 func Contains[T comparable](array []T, item T) bool
 ```
 
+#### EnsureDir
+
+EnsureDir makes sure that the given directory exists.
+
+```
+func EnsureDir(dir string) error
+```
+
 #### ExpandUser
 
 ExpandUser returns a string with ~ characters replaced by the home directory of the current user.

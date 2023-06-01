@@ -38,7 +38,7 @@ func Map[T any](items []T, f func(T) T) []T {
 }
 
 // MapToString runs the given function to produce strings for all the items in a slice and returns a slice containing
-//the results.
+// the results.
 func MapToString[T any](items []T, f func(T) string) []string {
 	outputItems := make([]string, len(items))
 	for index, item := range items {
