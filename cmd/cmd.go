@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/google/shlex"
 )
 
 var defaultShell = "sh"
@@ -24,12 +26,17 @@ type Output struct {
 	Stderr string
 }
 
-func getCmd(in Input) *exec.Cmd {
+func getCmd(in Input) (*exec.Cmd, error) {
 	var cmdSlice []string
+	var err error
+
 	if in.Shell {
 		cmdSlice = append([]string{defaultShell, "-c"}, in.Command)
 	} else {
-		cmdSlice = strings.Split(in.Command, " ")
+		cmdSlice, err = shlex.Split(in.Command)
+		if err != nil {
+			return &exec.Cmd{}, err
+		}
 	}
 	if in.Sudo {
 		cmdSlice = append([]string{"sudo"}, cmdSlice...)
@@ -40,19 +47,22 @@ func getCmd(in Input) *exec.Cmd {
 		cmd.Dir = in.Pwd
 	}
 
-	return cmd
+	return cmd, nil
 }
 
 // Run runs a command based on the CmdIn input and returns a CmdOut.
 func Run(in Input) (Output, error) {
-	cmd := getCmd(in)
+	cmd, err := getCmd(in)
+	if err != nil {
+		return Output{}, fmt.Errorf("error parsing command: %v", err)
+	}
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
+	err = cmd.Run()
 	return Output{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
 }
 
@@ -80,6 +90,10 @@ func RunFormatError(in Input) (Output, error) {
 
 // RunNoOutput runs a command and discards its output.
 func RunNoOutput(in Input) error {
-	cmd := getCmd(in)
+	cmd, err := getCmd(in)
+	if err != nil {
+		return err
+	}
+
 	return cmd.Run()
 }
