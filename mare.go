@@ -29,8 +29,8 @@ func Filter[T any](items []T, f func(T) bool) []T {
 }
 
 // Map runs the given function for all the items in a slice and returns a slice which is a collection of results.
-func Map[T any](items []any, f func(T) T) []T {
-	outputItems := make([]T, len(items))
+func Map[T any, U any](items []T, f func(T) U) []U {
+	outputItems := make([]U, len(items))
 	for index, item := range items {
 		outputItems[index] = f(item)
 	}
@@ -40,11 +40,7 @@ func Map[T any](items []any, f func(T) T) []T {
 // MapToString runs the given function to produce strings for all the items in a slice and returns a slice containing
 // the results.
 func MapToString[T any](items []T, f func(T) string) []string {
-	outputItems := make([]string, len(items))
-	for index, item := range items {
-		outputItems[index] = f(item)
-	}
-	return outputItems
+	return Map[T, string](items, f)
 }
 
 // FlatMap processes a slice with a function which results multiple items for each item in the slice and returns a slice
