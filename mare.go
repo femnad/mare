@@ -29,7 +29,7 @@ func Filter[T any](items []T, f func(T) bool) []T {
 }
 
 // Map runs the given function for all the items in a slice and returns a slice which is a collection of results.
-func Map[T any](items []T, f func(T) T) []T {
+func Map[T any](items []any, f func(T) T) []T {
 	outputItems := make([]T, len(items))
 	for index, item := range items {
 		outputItems[index] = f(item)
