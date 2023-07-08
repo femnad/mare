@@ -64,7 +64,13 @@ func getEnv(in Input, curEnv []string) ([]string, error) {
 					newPaths = append(newPaths, path)
 				}
 			}
-			allPaths := fmt.Sprintf("%s%s%s", value, pathEnvSeparator, strings.Join(newPaths, pathEnvSeparator))
+
+			var allPaths string
+			if len(newPaths) > 0 {
+				allPaths = fmt.Sprintf("%s%s%s", value, pathEnvSeparator, strings.Join(newPaths, pathEnvSeparator))
+			} else {
+				allPaths = value
+			}
 			cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", key, allPaths))
 
 			delete(desiredEnv, pathEnvKey)

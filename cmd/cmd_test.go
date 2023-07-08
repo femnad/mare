@@ -75,6 +75,14 @@ func Test_getEnv(t *testing.T) {
 			},
 			want: []string{"PATH=qux:foo:bar:baz"},
 		},
+		{
+			name: "Don't append trailing separator",
+			args: args{
+				in:     Input{Env: map[string]string{"PATH": "qux"}},
+				curEnv: []string{"PATH=qux"},
+			},
+			want: []string{"PATH=qux"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
