@@ -3,17 +3,25 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/google/shlex"
+
+	"github.com/femnad/mare"
 )
 
-var defaultShell = "sh"
+var (
+	defaultShell     = "sh"
+	pathEnvKey       = "PATH"
+	pathEnvSeparator = ":"
+)
 
 // Input represents configuration for a command to be executed.
 type Input struct {
 	Command string
+	Env     map[string]string
 	Pwd     string
 	Shell   bool
 	Sudo    bool
@@ -24,6 +32,61 @@ type Output struct {
 	Code   int
 	Stdout string
 	Stderr string
+}
+
+func getEnv(in Input, curEnv []string) ([]string, error) {
+	if len(in.Env) == 0 {
+		return nil, nil
+	}
+
+	var cmdEnv []string
+	desiredEnv := in.Env
+
+	for _, envVal := range curEnv {
+		keyAndValue := strings.Split(envVal, "=")
+		if len(keyAndValue) != 2 {
+			return nil, fmt.Errorf("unexpected key and value in environment: %s", keyAndValue)
+		}
+		key := keyAndValue[0]
+		value := keyAndValue[1]
+
+		if key == pathEnvKey {
+			addPaths, hasPath := desiredEnv[pathEnvKey]
+			if !hasPath {
+				cmdEnv = append(cmdEnv, envVal)
+				continue
+			}
+
+			var newPaths []string
+			envPaths := strings.Split(value, pathEnvSeparator)
+			for _, path := range strings.Split(addPaths, pathEnvSeparator) {
+				if !mare.Contains(envPaths, path) {
+					newPaths = append(newPaths, path)
+				}
+			}
+			allPaths := fmt.Sprintf("%s%s%s", value, pathEnvSeparator, strings.Join(newPaths, pathEnvSeparator))
+			cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", key, allPaths))
+
+			delete(desiredEnv, pathEnvKey)
+			continue
+		}
+
+		newValue, ok := desiredEnv[key]
+		if ok {
+			cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", key, newValue))
+
+			delete(desiredEnv, key)
+			continue
+		}
+
+		cmdEnv = append(cmdEnv, envVal)
+	}
+
+	for k, v := range desiredEnv {
+		cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	return cmdEnv, nil
 }
 
 func getCmd(in Input) (*exec.Cmd, error) {
@@ -43,6 +106,13 @@ func getCmd(in Input) (*exec.Cmd, error) {
 	}
 
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
+
+	cmdEnv, err := getEnv(in, os.Environ())
+	if err != nil {
+		return &exec.Cmd{}, err
+	}
+	cmd.Env = cmdEnv
+
 	if in.Pwd != "" {
 		cmd.Dir = in.Pwd
 	}
