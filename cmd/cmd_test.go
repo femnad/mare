@@ -18,10 +18,14 @@ func Test_getEnv(t *testing.T) {
 	}{
 		{
 			name: "no env specified",
-			args: args{
-				curEnv: nil,
-			},
 			want: nil,
+		},
+		{
+			name: "keep current env intact",
+			args: args{
+				curEnv: []string{"bar=baz"},
+			},
+			want: []string{"bar=baz"},
 		},
 		{
 			name: "new env for empty current",
@@ -46,6 +50,14 @@ func Test_getEnv(t *testing.T) {
 				curEnv: []string{"foo=baz"},
 			},
 			want: []string{"foo=bar"},
+		},
+		{
+			name: "Handle env with equal signs",
+			args: args{
+				curEnv: []string{"foo=baz=foo"},
+				in:     Input{Env: map[string]string{"bar": "qux"}},
+			},
+			want: []string{"foo=baz=foo", "bar=qux"},
 		},
 		{
 			name: "Set path",

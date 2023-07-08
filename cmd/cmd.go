@@ -36,14 +36,14 @@ type Output struct {
 
 func getEnv(in Input, curEnv []string) ([]string, error) {
 	if len(in.Env) == 0 {
-		return nil, nil
+		return curEnv, nil
 	}
 
 	var cmdEnv []string
 	desiredEnv := in.Env
 
 	for _, envVal := range curEnv {
-		keyAndValue := strings.Split(envVal, "=")
+		keyAndValue := strings.SplitN(envVal, "=", 2)
 		if len(keyAndValue) != 2 {
 			return nil, fmt.Errorf("unexpected key and value in environment: %s", keyAndValue)
 		}
