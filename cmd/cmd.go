@@ -20,11 +20,12 @@ var (
 
 // Input represents configuration for a command to be executed.
 type Input struct {
-	Command string
-	Env     map[string]string
-	Pwd     string
-	Shell   bool
-	Sudo    bool
+	Command         string
+	Env             map[string]string
+	Pwd             string
+	Shell           bool
+	Sudo            bool
+	SudoPreserveEnv bool
 }
 
 // Output represents the response from an executed command.
@@ -114,7 +115,11 @@ func getCmd(in Input) (*exec.Cmd, error) {
 		}
 	}
 	if in.Sudo {
-		cmdSlice = append([]string{"sudo"}, cmdSlice...)
+		sudoSlice := []string{"sudo"}
+		if in.SudoPreserveEnv {
+			sudoSlice = append(sudoSlice, "-E")
+		}
+		cmdSlice = append(sudoSlice, cmdSlice...)
 	}
 
 	newPath, ok := in.Env[pathEnvKey]
