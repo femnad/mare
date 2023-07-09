@@ -34,6 +34,25 @@ type Output struct {
 	Stderr string
 }
 
+func mergePaths(curPath, newPath string) string {
+	var newPaths []string
+	envPaths := strings.Split(curPath, pathEnvSeparator)
+	for _, path := range strings.Split(newPath, pathEnvSeparator) {
+		if !mare.Contains(envPaths, path) {
+			newPaths = append(newPaths, path)
+		}
+	}
+
+	var allPaths string
+	if len(newPaths) > 0 {
+		allPaths = fmt.Sprintf("%s%s%s", curPath, pathEnvSeparator, strings.Join(newPaths, pathEnvSeparator))
+	} else {
+		allPaths = curPath
+	}
+
+	return allPaths
+}
+
 func getEnv(in Input, curEnv []string) ([]string, error) {
 	if len(in.Env) == 0 {
 		return curEnv, nil
@@ -57,21 +76,8 @@ func getEnv(in Input, curEnv []string) ([]string, error) {
 				continue
 			}
 
-			var newPaths []string
-			envPaths := strings.Split(value, pathEnvSeparator)
-			for _, path := range strings.Split(addPaths, pathEnvSeparator) {
-				if !mare.Contains(envPaths, path) {
-					newPaths = append(newPaths, path)
-				}
-			}
-
-			var allPaths string
-			if len(newPaths) > 0 {
-				allPaths = fmt.Sprintf("%s%s%s", value, pathEnvSeparator, strings.Join(newPaths, pathEnvSeparator))
-			} else {
-				allPaths = value
-			}
-			cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", key, allPaths))
+			merged := mergePaths(value, addPaths)
+			cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", pathEnvKey, merged))
 
 			delete(desiredEnv, pathEnvKey)
 			continue
@@ -111,6 +117,22 @@ func getCmd(in Input) (*exec.Cmd, error) {
 		cmdSlice = append([]string{"sudo"}, cmdSlice...)
 	}
 
+	newPath, ok := in.Env[pathEnvKey]
+	if ok {
+		var updatedPath string
+
+		path := os.Getenv(pathEnvKey)
+		if path == "" {
+			updatedPath = path
+		} else {
+			updatedPath = mergePaths(path, newPath)
+		}
+
+		err = os.Setenv(pathEnvKey, updatedPath)
+		if err != nil {
+			return &exec.Cmd{}, fmt.Errorf("error setting path to %s: %v", updatedPath, err)
+		}
+	}
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
 
 	cmdEnv, err := getEnv(in, os.Environ())
