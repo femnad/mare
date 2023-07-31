@@ -24,6 +24,7 @@ type Input struct {
 	Env             map[string]string
 	Pwd             string
 	Shell           bool
+	ShellCmd        string
 	Sudo            bool
 	SudoPreserveEnv bool
 }
@@ -106,8 +107,13 @@ func getCmd(in Input) (*exec.Cmd, error) {
 	var cmdSlice []string
 	var err error
 
+	shell := in.ShellCmd
+	if shell == "" {
+		shell = defaultShell
+	}
+
 	if in.Shell {
-		cmdSlice = append([]string{defaultShell, "-c"}, in.Command)
+		cmdSlice = append([]string{shell, "-c"}, in.Command)
 	} else {
 		cmdSlice, err = shlex.Split(in.Command)
 		if err != nil {
