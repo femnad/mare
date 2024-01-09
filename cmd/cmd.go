@@ -175,8 +175,8 @@ func Run(in Input) (Output, error) {
 	return Output{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
 }
 
-// RunFormatError runs a command and on any errors returns an error which contains information about the execution.
-func RunFormatError(in Input) (Output, error) {
+// RunFmtErr runs a command and on any errors returns an error which contains stdout and stderr output if any.
+func RunFmtErr(in Input) (Output, error) {
 	out, err := Run(in)
 	if err == nil {
 		return out, nil
@@ -197,8 +197,8 @@ func RunFormatError(in Input) (Output, error) {
 	return out, fmt.Errorf(outStr)
 }
 
-// RunNoOutput runs a command and discards its output.
-func RunNoOutput(in Input) error {
+// RunNoOut runs a command and discards its output.
+func RunNoOut(in Input) error {
 	cmd, err := getCmd(in)
 	if err != nil {
 		return err
