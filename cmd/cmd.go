@@ -197,6 +197,12 @@ func RunFmtErr(in Input) (Output, error) {
 	return out, fmt.Errorf(outStr)
 }
 
+// RunErrOnly runs a command and on any errors returns an error and ignores the output.
+func RunErrOnly(in Input) error {
+	_, err := RunFmtErr(in)
+	return err
+}
+
 // RunNoOut runs a command and discards its output.
 func RunNoOut(in Input) error {
 	cmd, err := getCmd(in)
