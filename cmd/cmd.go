@@ -36,6 +36,13 @@ type Output struct {
 	Stderr string
 }
 
+// OutBuffer represents the response from an executed command where stdout and stderr are store as buffers.
+type OutBuffer struct {
+	Code   int
+	Stdout bytes.Buffer
+	Stderr bytes.Buffer
+}
+
 func mergePaths(curPath, newPath string) string {
 	var newPaths []string
 	envPaths := strings.Split(curPath, pathEnvSeparator)
@@ -211,4 +218,20 @@ func RunNoOut(in Input) error {
 	}
 
 	return cmd.Run()
+}
+
+// RunOutBuffer runs a command based on the Input and returns an OutBuffer.
+func RunOutBuffer(in Input) (OutBuffer, error) {
+	cmd, err := getCmd(in)
+	if err != nil {
+		return OutBuffer{}, fmt.Errorf("error parsing command: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	return OutBuffer{Stdout: stdout, Stderr: stderr, Code: cmd.ProcessState.ExitCode()}, err
 }
