@@ -21,6 +21,7 @@ var (
 // Input represents configuration for a command to be executed.
 type Input struct {
 	Command         string
+	CmdSlice        []string
 	Env             map[string]string
 	Pwd             string
 	Shell           bool
@@ -114,19 +115,24 @@ func getCmd(in Input) (*exec.Cmd, error) {
 	var cmdSlice []string
 	var err error
 
-	shell := in.ShellCmd
-	if shell == "" {
-		shell = defaultShell
+	if in.CmdSlice == nil {
+		shell := in.ShellCmd
+		if shell == "" {
+			shell = defaultShell
+		}
+
+		if in.Shell {
+			cmdSlice = append([]string{shell, "-c"}, in.Command)
+		} else {
+			cmdSlice, err = shlex.Split(in.Command)
+			if err != nil {
+				return &exec.Cmd{}, err
+			}
+		}
+	} else {
+		cmdSlice = in.CmdSlice
 	}
 
-	if in.Shell {
-		cmdSlice = append([]string{shell, "-c"}, in.Command)
-	} else {
-		cmdSlice, err = shlex.Split(in.Command)
-		if err != nil {
-			return &exec.Cmd{}, err
-		}
-	}
 	if in.Sudo {
 		sudoSlice := []string{"sudo"}
 		if in.SudoPreserveEnv {
